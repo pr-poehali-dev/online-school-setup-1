@@ -14,6 +14,7 @@ import funcUrls from '../../backend/func2url.json';
 const Index = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,6 +26,7 @@ const Index = () => {
 
   const scrollToSection = (sectionId: string) => {
     setActiveSection(sectionId);
+    setIsMobileMenuOpen(false);
     const element = document.getElementById(sectionId);
     element?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -221,10 +223,39 @@ const Index = () => {
               <button onClick={() => scrollToSection('faq')} className="text-sm hover:text-primary transition-colors">FAQ</button>
               <button onClick={() => scrollToSection('contact')} className="text-sm hover:text-primary transition-colors">Контакты</button>
             </div>
-            <Button onClick={() => scrollToSection('contact')} className="hidden md:inline-flex">
-              Связаться
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button onClick={() => scrollToSection('contact')} className="hidden md:inline-flex">
+                Связаться
+              </Button>
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <Icon name="X" size={24} className="text-secondary" />
+                ) : (
+                  <Icon name="Menu" size={24} className="text-secondary" />
+                )}
+              </button>
+            </div>
           </div>
+          {isMobileMenuOpen && (
+            <div className="md:hidden mt-4 pb-4 animate-fade-in">
+              <div className="flex flex-col space-y-3">
+                <button onClick={() => scrollToSection('home')} className="text-left py-2 px-4 hover:bg-gray-100 rounded-lg transition-colors">Главная</button>
+                <button onClick={() => scrollToSection('services')} className="text-left py-2 px-4 hover:bg-gray-100 rounded-lg transition-colors">Услуги</button>
+                <button onClick={() => scrollToSection('portfolio')} className="text-left py-2 px-4 hover:bg-gray-100 rounded-lg transition-colors">Портфолио</button>
+                <button onClick={() => scrollToSection('team')} className="text-left py-2 px-4 hover:bg-gray-100 rounded-lg transition-colors">Команда</button>
+                <button onClick={() => scrollToSection('pricing')} className="text-left py-2 px-4 hover:bg-gray-100 rounded-lg transition-colors">Прайс</button>
+                <button onClick={() => scrollToSection('faq')} className="text-left py-2 px-4 hover:bg-gray-100 rounded-lg transition-colors">FAQ</button>
+                <button onClick={() => scrollToSection('contact')} className="text-left py-2 px-4 hover:bg-gray-100 rounded-lg transition-colors">Контакты</button>
+                <Button onClick={() => scrollToSection('contact')} className="w-full">
+                  Связаться
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
