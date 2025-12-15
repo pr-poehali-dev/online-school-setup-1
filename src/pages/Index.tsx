@@ -1,17 +1,77 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
+import funcUrls from '../../backend/func2url.json';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('home');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    service: '',
+    message: ''
+  });
+  const { toast } = useToast();
 
   const scrollToSection = (sectionId: string) => {
     setActiveSection(sectionId);
     const element = document.getElementById(sectionId);
     element?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(funcUrls['send-email'], {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: 'Заявка отправлена!',
+          description: 'Мы свяжемся с вами в ближайшее время.',
+        });
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          service: '',
+          message: ''
+        });
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось отправить заявку. Попробуйте позже.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отправить заявку. Проверьте подключение.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const services = [
@@ -346,41 +406,121 @@ const Index = () => {
             <h2 className="text-4xl font-heading font-bold text-secondary mb-4">Свяжитесь с нами</h2>
             <p className="text-lg text-muted-foreground">Готовы обсудить ваш проект</p>
           </div>
-          <Card className="p-8">
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Icon name="Mail" size={24} className="text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-8">
+              <h3 className="text-2xl font-heading font-bold mb-6">Отправить заявку</h3>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Ваше имя *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    placeholder="Иван Иванов"
+                  />
                 </div>
                 <div>
-                  <p className="font-medium">Email</p>
-                  <a href="mailto:info@getcourse-pro.ru" className="text-primary hover:underline">info@getcourse-pro.ru</a>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Icon name="Phone" size={24} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium">Телефон</p>
-                  <a href="tel:+79001234567" className="text-primary hover:underline">+7 (900) 123-45-67</a>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Icon name="MessageCircle" size={24} className="text-primary" />
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    placeholder="ivan@example.com"
+                  />
                 </div>
                 <div>
-                  <p className="font-medium">Telegram</p>
-                  <a href="https://t.me/getcourse_pro" className="text-primary hover:underline">@getcourse_pro</a>
+                  <Label htmlFor="phone">Телефон *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                    placeholder="+7 (900) 123-45-67"
+                  />
                 </div>
+                <div>
+                  <Label htmlFor="service">Интересующая услуга</Label>
+                  <Select value={formData.service} onValueChange={(value) => setFormData({ ...formData, service: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите услугу" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Базовая настройка">Базовая настройка</SelectItem>
+                      <SelectItem value="Расширенная настройка">Расширенная настройка</SelectItem>
+                      <SelectItem value="Премиум пакет">Премиум пакет</SelectItem>
+                      <SelectItem value="Консультация">Консультация</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="message">Сообщение *</Label>
+                  <Textarea
+                    id="message"
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    required
+                    placeholder="Опишите ваш проект и требования..."
+                    rows={4}
+                  />
+                </div>
+                <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Icon name="Loader2" size={20} className="mr-2 animate-spin" />
+                      Отправка...
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="Send" size={20} className="mr-2" />
+                      Отправить заявку
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Card>
+            <Card className="p-8">
+              <h3 className="text-2xl font-heading font-bold mb-6">Контактная информация</h3>
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Icon name="Mail" size={24} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Email</p>
+                    <a href="mailto:info@getcourse-pro.ru" className="text-primary hover:underline">info@getcourse-pro.ru</a>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Icon name="Phone" size={24} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Телефон</p>
+                    <a href="tel:+79001234567" className="text-primary hover:underline">+7 (900) 123-45-67</a>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Icon name="MessageCircle" size={24} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Telegram</p>
+                    <a href="https://t.me/getcourse_pro" className="text-primary hover:underline">@getcourse_pro</a>
+                  </div>
+                </div>
+                <Button size="lg" className="w-full mt-6" asChild>
+                  <a href="https://t.me/getcourse_pro" target="_blank" rel="noopener noreferrer">
+                    <Icon name="Send" size={20} className="mr-2" />
+                    Написать в Telegram
+                  </a>
+                </Button>
               </div>
-              <Button size="lg" className="w-full mt-6">
-                <Icon name="Send" size={20} className="mr-2" />
-                Написать в Telegram
-              </Button>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </div>
       </section>
 

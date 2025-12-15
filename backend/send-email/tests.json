@@ -1,0 +1,41 @@
+{
+  "tests": [
+    {
+      "name": "Test valid contact form submission",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "name": "Иван Иванов",
+        "email": "test@example.com",
+        "phone": "+79001234567",
+        "message": "Интересует базовая настройка GetCourse",
+        "service": "Базовая настройка"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test missing required fields",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "name": "Test"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}
